@@ -76,7 +76,6 @@ function UserWedding({ wedding, channels, user, stop }) {
     onVideoTrackRemoteUser,
     onAudioTrackRemoteUser,
     endHonLe,
-    setEndHonLe,
   } = useAgora(client, clientRtm);
 
   const [onCamMain, setOnCamMain] = useState(true);
@@ -85,7 +84,22 @@ function UserWedding({ wedding, channels, user, stop }) {
 
   const [currentTable, setCurrentTable] = useState(null);
 
-  useEffect(() => {}, [wedding]);
+  useEffect(() => {
+    if (endHonLe) {
+      leaveAndJoinTable();
+    }
+  }, [endHonLe]);
+
+  const leaveAndJoinTable = async () => {
+    await leave(false);
+    const idx = channels?.findIndex(
+      (item) => item?.id === user?.channel_can_join
+    );
+    if (idx > -1) {
+      setCurrentTable(channels?.[idx]);
+      joinTable(channels?.[idx]);
+    }
+  };
 
   useEffect(() => {
     setCurrentUser(user);
@@ -157,7 +171,6 @@ function UserWedding({ wedding, channels, user, stop }) {
 
   const leaveChanel = async () => {
     try {
-      setEndHonLe(true);
       await leave();
       stop();
     } catch (error) {
