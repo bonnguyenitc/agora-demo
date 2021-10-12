@@ -262,8 +262,7 @@ function Demo() {
         body: body,
         headers: {
           "Content-type": "application/json;charset=utf-8",
-          Authorization:
-            "Basic ZTg3ZjRlMzg5ODkyNDU5M2I1NzA3MzZjMGI2OTMzYWY6NjA2YzQ1NGZlNzEzNDU2NmFmYTgyODE5ZGMwOTRjNWM=",
+          Authorization: process.env.NEXT_PUBLIC_APP_AUTH_AGORA_API,
         },
       }
     )
@@ -301,8 +300,7 @@ function Demo() {
           body: body,
           headers: {
             "Content-type": "application/json;charset=utf-8",
-            Authorization:
-              "Basic ZTg3ZjRlMzg5ODkyNDU5M2I1NzA3MzZjMGI2OTMzYWY6NjA2YzQ1NGZlNzEzNDU2NmFmYTgyODE5ZGMwOTRjNWM=",
+            Authorization: process.env.NEXT_PUBLIC_APP_AUTH_AGORA_API,
           },
         }
       )
@@ -323,8 +321,7 @@ function Demo() {
             }),
             headers: {
               "Content-type": "application/json;charset=utf-8",
-              Authorization:
-                "Basic ZTg3ZjRlMzg5ODkyNDU5M2I1NzA3MzZjMGI2OTMzYWY6NjA2YzQ1NGZlNzEzNDU2NmFmYTgyODE5ZGMwOTRjNWM=",
+              Authorization: process.env.NEXT_PUBLIC_APP_AUTH_AGORA_API,
             },
           }
         )

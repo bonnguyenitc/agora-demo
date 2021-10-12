@@ -16,6 +16,7 @@
     "agora-access-token": "^2.0.4",
     "agora-rtc-sdk-ng": "^4.7.1",
     "agora-rtm-sdk": "^1.4.3",
+    "formik": "^2.2.9",
     "framer-motion": "^4",
     "next": "11.1.2",
     "react": "17.0.2",

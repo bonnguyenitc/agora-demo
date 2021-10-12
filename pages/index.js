@@ -1,6 +1,6 @@
 import dynamic from "next/dynamic";
 
-const DemoComponent = dynamic(
+const Demo = dynamic(
   () => {
     return import("../src/components/Demo");
   },
@@ -8,5 +8,5 @@ const DemoComponent = dynamic(
 );
 
 export default function Home() {
-  return <DemoComponent />;
+  return <Demo />;
 }

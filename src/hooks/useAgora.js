@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import AgoraRTC from "agora-rtc-sdk-ng";
 import { MdFormatListBulleted } from "react-icons/md";
+import { TYPE_USER } from "../utils/constants";
 
 export const ACTIONS_REMOTE = {
   OFF_VIDEO: "OFF_VIDEO",
@@ -11,6 +12,7 @@ export const ACTIONS_REMOTE = {
   OFF_AUDIO_SS: "OFF_AUDIO_SS",
   ON_VIDEO_SS: "ON_VIDEO_SS",
   ON_AUDIO_SS: "ON_AUDIO_SS",
+  KET_THUC_HON_LE: "KET_THUC_HON_LE",
 };
 
 export default function useAgora(client, clientRtm) {
@@ -38,6 +40,8 @@ export default function useAgora(client, clientRtm) {
   const [remoteUsersStatus, setRemoteUsersStatus] = useState([]);
 
   const [role, setRole] = useState("");
+
+  const [endHonLe, setEndHonLe] = useState(false);
 
   useEffect(() => {
     handleAction(holdAction?.action);
@@ -68,6 +72,12 @@ export default function useAgora(client, clientRtm) {
         break;
       case ACTIONS_REMOTE.OFF_AUDIO_SS:
         handleActionSuccess(action);
+        break;
+      case ACTIONS_REMOTE.KET_THUC_HON_LE:
+        if (currentUser?.type === TYPE_USER?.NORMAL) {
+          setEndHonLe(true);
+          leave();
+        }
         break;
       default:
         break;
@@ -173,6 +183,16 @@ export default function useAgora(client, clientRtm) {
     );
   }
 
+  async function ketThucHonLe() {
+    await channelSendMessage(
+      JSON.stringify({
+        to: "ALL",
+        from: currentUser?.id,
+        action: ACTIONS_REMOTE.KET_THUC_HON_LE,
+      })
+    );
+  }
+
   async function muteVideoTrackRemoteUser(user) {
     setRemoteUsers((remoteUsers) => {
       return {
@@ -183,7 +203,7 @@ export default function useAgora(client, clientRtm) {
         },
       };
     });
-    await client?.unsubscribe(user, "video");
+    // await client?.unsubscribe(user, "video");
   }
 
   async function muteAudioTrackRemoteUser(user) {
@@ -196,7 +216,33 @@ export default function useAgora(client, clientRtm) {
         },
       };
     });
-    await client?.unsubscribe(user, "audio");
+    // await client?.unsubscribe(user, "audio");
+  }
+
+  async function onVideoTrackRemoteUser(user) {
+    setRemoteUsers((remoteUsers) => {
+      return {
+        ...remoteUsers,
+        [user?.uid]: {
+          ...remoteUsers?.[user?.uid],
+          onCam: true,
+        },
+      };
+    });
+    // await client?.subscribe(user, "video");
+  }
+
+  async function onAudioTrackRemoteUser(user) {
+    setRemoteUsers((remoteUsers) => {
+      return {
+        ...remoteUsers,
+        [user?.uid]: {
+          ...remoteUsers?.[user?.uid],
+          onMic: true,
+        },
+      };
+    });
+    // await client?.subscribe(user, "audio");
   }
 
   async function subVideoTrackRemoteUser(user) {
@@ -424,6 +470,9 @@ export default function useAgora(client, clientRtm) {
     channelRtm?.current?.on("ChannelMessage", function(message, memberId) {
       try {
         const parseSignal = JSON.parse(message?.text);
+        if (parseSignal?.to === "ALL") {
+          return setAction(parseSignal);
+        }
         setCurrentUser((currentUser) => {
           if (parseSignal) {
             if (parseSignal?.to === currentUser?.id) {
@@ -481,5 +530,10 @@ export default function useAgora(client, clientRtm) {
     sendMessageOffAudioLocalOfRemote,
     sendMessageOnAudioLocalOfRemote,
     setCurrentUser,
+    onVideoTrackRemoteUser,
+    onAudioTrackRemoteUser,
+    ketThucHonLe,
+    endHonLe,
+    setEndHonLe,
   };
 }
