@@ -6,6 +6,14 @@ import {
   Button,
   Select,
   IconButton,
+  useDisclosure,
+  Modal,
+  ModalOverlay,
+  ModalContent,
+  ModalHeader,
+  ModalCloseButton,
+  ModalBody,
+  ModalFooter,
 } from "@chakra-ui/react";
 import React, { useEffect } from "react";
 import AgoraRTC from "agora-rtc-sdk-ng";
@@ -27,6 +35,7 @@ const config = {
 };
 
 const client = AgoraRTC.createClient(config);
+const client1 = AgoraRTC.createClient(config);
 
 const APP_ID = process.env.NEXT_PUBLIC_APP_ID;
 
@@ -62,7 +71,42 @@ function HostWedding({ wedding, channels, user, stop }) {
     sendMessageOnAudioLocalOfRemote,
     setCurrentUser,
     ketThucHonLe,
+    sendMessageAllowJoinMC,
+    sendMessageRemoveJoinMC,
   } = useAgora(client, clientRtm);
+
+  const {
+    localAudioTrack: localAudioTrack1,
+    localVideoTrack: localVideoTrack1,
+    leave: leave1,
+    join: join1,
+    joinState: joinState1,
+    remoteUsers: remoteUsers1,
+    role: role1,
+    trigPublishVideo: trigPublishVideo1,
+    triPublishAudio: triPublishAudio1,
+    videoOn: videoOn1,
+    audioOn: audioOn1,
+    cams: cams1,
+    mics: mics1,
+    switchCamera: switchCamera1,
+    switchMicrophone: switchMicrophone1,
+    currentCam: currentCam1,
+    currentMic: currentMic1,
+    muteVideoTrackRemoteUser: muteVideoTrackRemoteUser1,
+    muteAudioTrackRemoteUser: muteAudioTrackRemoteUser1,
+    channelSendMessage: channelSendMessage1,
+    joinRtmChannel: joinRtmChannel1,
+    remoteUsersStatus: remoteUsersStatus1,
+    sendMessageOffVideoLocalOfRemote: sendMessageOffVideoLocalOfRemote1,
+    sendMessageOnVideoLocalOfRemote: sendMessageOnVideoLocalOfRemote1,
+    sendMessageOffAudioLocalOfRemote: sendMessageOffAudioLocalOfRemote1,
+    sendMessageOnAudioLocalOfRemote: sendMessageOnAudioLocalOfRemote1,
+    setCurrentUser: setCurrentUser1,
+    ketThucHonLe: ketThucHonLe1,
+  } = useAgora(client1, null);
+
+  const { isOpen, onOpen, onClose } = useDisclosure();
 
   useEffect(() => {}, [wedding]);
 
@@ -109,6 +153,17 @@ function HostWedding({ wedding, channels, user, stop }) {
     await joinRtmChannel(user?.id?.toString(), tokenRtm);
   };
 
+  const startJoinCheckMC = async () => {
+    const token = await fetch(
+      `api/getToken?id=${user?.id}&chanel=CHANNEL_CHECK_MC&role=1`
+    )
+      .then((res) => res.json())
+      .then((data) => data?.token);
+    if (!token) return alert("Error");
+
+    await join1(APP_ID, "CHANNEL_CHECK_MC", token, user?.id, "host");
+  };
+
   const leaveChanel = async () => {
     try {
       await leave();
@@ -136,6 +191,10 @@ function HostWedding({ wedding, channels, user, stop }) {
 
   const nhapTiec = () => {
     ketThucHonLe();
+  };
+
+  const kickMC = async () => {
+    await sendMessageRemoveJoinMC(11);
   };
 
   return (
@@ -195,11 +254,106 @@ function HostWedding({ wedding, channels, user, stop }) {
               </Button>
               <Box height="4" />
               <Button colorScheme="red" onClick={leaveChanel} maxW="xs">
-                Leave chanel
+                Leave channel
+              </Button>
+              <Box height="4" />
+              <Button
+                colorScheme="red"
+                onClick={() => {
+                  onOpen();
+                  startJoinCheckMC();
+                }}
+                maxW="xs"
+              >
+                Check MC
+              </Button>
+              <Box height="4" />
+              <Button
+                colorScheme="red"
+                onClick={async () => {
+                  await kickMC();
+                }}
+                maxW="xs"
+              >
+                Remove MC
               </Button>
             </VStack>
           )}
         </VStack>
+        <Modal isOpen={isOpen} onClose={onClose}>
+          <ModalOverlay />
+          <ModalContent>
+            <ModalHeader>Check MC</ModalHeader>
+            <ModalCloseButton />
+            <ModalBody>
+              <Box w="md" height="md">
+                {remoteUsersStatus1.map((user) => {
+                  return (
+                    <Box
+                      key={user.uid}
+                      w="90%"
+                      h="100%"
+                      bg="blue.900"
+                      position="relative"
+                    >
+                      <MediaPlayer
+                        videoTrack={user.videoTrack}
+                        audioTrack={user.audioTrack}
+                      />
+                      <VStack
+                        position="absolute"
+                        top="0"
+                        bottom="0"
+                        left="0"
+                        right="0"
+                        backgroundColor="transparent"
+                        alignItems="flex-start"
+                        p="2"
+                        justifyContent="space-between"
+                      >
+                        <VStack alignItems="flex-start">
+                          <Text color="black" fontSize="12px">
+                            {user?.uid || "ON"}
+                          </Text>
+                          <Text color="black" fontSize="12px">
+                            MIC : {user?.hasAudio ? "ON" : "OFF"}
+                          </Text>
+                          <Text color="black" fontSize="12px">
+                            CAM : {user?.hasVideo ? "ON" : "OFF"}
+                          </Text>
+                        </VStack>
+                      </VStack>
+                    </Box>
+                  );
+                })}
+              </Box>
+            </ModalBody>
+
+            <ModalFooter>
+              <Button
+                colorScheme="blue"
+                mr={3}
+                onClick={() => {
+                  onClose();
+                  leave1(false);
+                }}
+              >
+                Close
+              </Button>
+              <Button
+                variant="ghost"
+                onClick={async () => {
+                  await sendMessageAllowJoinMC(11);
+                  await leave1(false);
+                  onClose();
+                  // send message
+                }}
+              >
+                Access
+              </Button>
+            </ModalFooter>
+          </ModalContent>
+        </Modal>
         <Box width="50%" height="100%" backgroundColor="main.3">
           <MediaPlayer
             videoTrack={localVideoTrack}
@@ -211,7 +365,6 @@ function HostWedding({ wedding, channels, user, stop }) {
       </HStack>
       <HStack width="100vw" height="50vh" overflow="scroll">
         {remoteUsersStatus.map((user) => {
-          console.log("user", user);
           return (
             <Box
               key={user.uid}

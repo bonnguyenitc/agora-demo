@@ -13,6 +13,8 @@ export const ACTIONS_REMOTE = {
   ON_VIDEO_SS: "ON_VIDEO_SS",
   ON_AUDIO_SS: "ON_AUDIO_SS",
   KET_THUC_HON_LE: "KET_THUC_HON_LE",
+  ACCESS_JOIN_MC: "ACCESS_JOIN_MC",
+  REMOVE_JOIN_MC: "REMOVE_JOIN_MC",
 };
 
 export default function useAgora(client, clientRtm) {
@@ -179,6 +181,26 @@ export default function useAgora(client, clientRtm) {
         to: uid,
         from: currentUser?.id,
         action: "ON_AUDIO",
+      })
+    );
+  }
+
+  async function sendMessageAllowJoinMC(uid) {
+    await channelSendMessage(
+      JSON.stringify({
+        to: uid,
+        from: currentUser?.id,
+        action: "ACCESS_JOIN_MC",
+      })
+    );
+  }
+
+  async function sendMessageRemoveJoinMC(uid) {
+    await channelSendMessage(
+      JSON.stringify({
+        to: uid,
+        from: currentUser?.id,
+        action: "REMOVE_JOIN_MC",
       })
     );
   }
@@ -394,7 +416,7 @@ export default function useAgora(client, clientRtm) {
   }
 
   async function joinRtmChannel(uid, token) {
-    await clientRtm.login({ uid, token });
+    await clientRtm?.login({ uid, token });
     await channelRtm?.current?.join();
     // await clientRtm.setLocalUserAttributes({
     //   id: uid?.toString(),
@@ -428,7 +450,7 @@ export default function useAgora(client, clientRtm) {
     setRemoteUsersStatus(client.remoteUsers);
     getDevices();
 
-    channelRtm.current = clientRtm.createChannel("CHANNEL_ID_1");
+    channelRtm.current = clientRtm?.createChannel("CHANNEL_ID_1");
 
     const handleUserPublished = async (user, mediaType) => {
       await client.subscribe(user, mediaType);
@@ -468,6 +490,7 @@ export default function useAgora(client, clientRtm) {
     client.on("user-left", handleUserLeft);
     // client.on("user-info-updated", handleUserInfoUpdate);
     channelRtm?.current?.on("ChannelMessage", function(message, memberId) {
+      console.log("message, memberId", JSON.parse(message?.text), memberId);
       try {
         const parseSignal = JSON.parse(message?.text);
         if (parseSignal?.to === "ALL") {
@@ -535,5 +558,7 @@ export default function useAgora(client, clientRtm) {
     ketThucHonLe,
     endHonLe,
     setEndHonLe,
+    sendMessageAllowJoinMC,
+    sendMessageRemoveJoinMC,
   };
 }
